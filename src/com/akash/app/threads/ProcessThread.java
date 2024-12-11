@@ -18,6 +18,12 @@ public class ProcessThread implements Runnable {
                     Database.getDatabase().getCatchList().add(task);
                     service.execute(task);
                 }
+            }else {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
