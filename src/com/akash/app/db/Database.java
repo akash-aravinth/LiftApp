@@ -1,7 +1,6 @@
 package com.akash.app.db;
 
 import com.akash.app.model.Lift;
-import com.akash.app.model.Passenger;
 import com.akash.app.model.Requests;
 
 import java.util.*;
@@ -95,6 +94,7 @@ public class Database {
 
     public Lift isRequestAvailable(Requests request) {
         Lift lift = null;
+        Requests addRequest = null;
         String movement = "";
         if (request.getSource() < request.getDestination()) {
             movement = "up";
@@ -106,23 +106,38 @@ public class Database {
         if (!availableRequests.isEmpty()) {
             for (Requests r : getCatchList()) {
                 Lift l = r.getLift();
-                if (l.getStations().contains(r.getSource()) && l.getStations().contains(r.getDestination()) && l.getNoOfPassengers() + request.getPassengersMap().get(request.getDestination()).getCount() <= 10) {
+                int passengers = 0;
+                if (request.getSource() < request.getDestination()){
+                    passengers = request.getPasengersMap().getOrDefault(request.getDestination(),0);
+                }else{
+                    passengers = request.getPasengersMap().getOrDefault(-request.getDestination(),0);
+                }
+                if (l.getStations().contains(r.getSource()) && l.getStations().contains(r.getDestination()) && l.getNoOfPassengers() + passengers <= 10) {
                     int dis = ((Math.abs(l.getCurrentPos() - request.getSource())) % l.getIncrements());
                     if (dis < steps) {
                         steps = dis;
                         lift = l;
+                        addRequest = r;
                     }
                 }
             }
             if (lift != null) {
-                lift.setNoOfPassengers(lift.getNoOfPassengers() + request.getPassengersMap().get(request.getDestination()).getCount());
+                int passengers = 0;
+                if (request.getSource() < request.getDestination()){
+                    passengers = request.getPasengersMap().getOrDefault(request.getDestination(),0);
+                }else{
+                    passengers = request.getPasengersMap().getOrDefault(-request.getDestination(),0);
+                }
+                lift.setNoOfPassengers(lift.getNoOfPassengers() + passengers);
             }
             if (lift != null) {
                 if (lift.getStatus().equals("up")) {
+                    addRequest.getPasengersMap().put(request.getDestination(),request.getPasengersMap().get(request.getDestination()));
                     if (lift.getDestinationPos() < request.getDestination()) {
                         lift.setDestinationPos(request.getDestination());
                     }
                 } else if (lift.getStatus().equals("down")) {
+                    addRequest.getPasengersMap().put(-request.getDestination(),request.getPasengersMap().get(request.getDestination()));
                     if (lift.getDestinationPos() > request.getDestination()) {
                         lift.setDestinationPos(lift.getDestinationPos());
                     }

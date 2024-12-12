@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class Requests implements Runnable {
-    private Map<Integer,Passenger> pasengersMap;
+    private Map<Integer,Integer> pasengersMap;
     private int source;
     private int destination;
     private String status;
@@ -23,11 +23,11 @@ public class Requests implements Runnable {
         pasengersMap = new HashMap<>();
     }
 
-    public Map<Integer, Passenger> getPassengersMap() {
+    public Map<Integer, Integer> getPasengersMap() {
         return pasengersMap;
     }
 
-    public void setPassengersMap(Map<Integer, Passenger> pasengersMap) {
+    public void setPasengersMap(Map<Integer, Integer> pasengersMap) {
         this.pasengersMap = pasengersMap;
     }
 
@@ -74,8 +74,9 @@ public class Requests implements Runnable {
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    if (this.getPassengersMap().containsKey(lift.getCurrentPos()) && this.getPassengersMap().get(lift.getCurrentPos()).getDirection().equals("down")){
-                        lift.setNoOfPassengers(lift.getNoOfPassengers() - this.getPassengersMap().get(lift.getCurrentPos()).getCount());
+                    if (this.getPasengersMap().containsKey(-lift.getCurrentPos())){
+                        lift.setNoOfPassengers(lift.getNoOfPassengers()-this.getPasengersMap().get(-lift.getCurrentPos()));
+                        this.getPasengersMap().remove(-lift.getCurrentPos());
                     }
                     lift.setCurrentPos(lift.getCurrentPos() - lift.getIncrements());
                 }
@@ -87,12 +88,15 @@ public class Requests implements Runnable {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if (this.getPassengersMap().containsKey(lift.getCurrentPos()) && this.getPassengersMap().get(lift.getCurrentPos()).getDirection().equals("up")){
-                    lift.setNoOfPassengers(lift.getNoOfPassengers() - this.getPassengersMap().get(lift.getCurrentPos()).getCount());
+                if (this.getPasengersMap().containsKey(lift.getCurrentPos())){
+                    lift.setNoOfPassengers(lift.getNoOfPassengers()-this.getPasengersMap().get(lift.getCurrentPos()));
+                    this.getPasengersMap().remove(lift.getCurrentPos());
                 }
                 lift.setCurrentPos(lift.getCurrentPos()+ lift.getIncrements());
             }
+            this.getPasengersMap().clear();
             Database.getDatabase().getCatchList().remove(this);
+            lift.setNoOfPassengers(0);
             lift.setStatus("idle");
         }else {
             if (lift.getCurrentPos() < source){
@@ -103,8 +107,9 @@ public class Requests implements Runnable {
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    if (this.getPassengersMap().containsKey(lift.getCurrentPos()) && this.getPassengersMap().get(lift.getCurrentPos()).getDirection().equals("up")){
-                        lift.setNoOfPassengers(lift.getNoOfPassengers() - this.getPassengersMap().get(lift.getCurrentPos()).getCount());
+                    if (this.getPasengersMap().containsKey(lift.getCurrentPos())){
+                        lift.setNoOfPassengers(lift.getNoOfPassengers()-this.getPasengersMap().get(lift.getCurrentPos()));
+                        this.getPasengersMap().remove(lift.getCurrentPos());
                     }
                     lift.setCurrentPos(lift.getCurrentPos()+ lift.getIncrements());
                 }
@@ -116,11 +121,13 @@ public class Requests implements Runnable {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if (this.getPassengersMap().containsKey(lift.getCurrentPos()) && this.getPassengersMap().get(lift.getCurrentPos()).getDirection().equals("down")){
-                    lift.setNoOfPassengers(lift.getNoOfPassengers() - this.getPassengersMap().get(lift.getCurrentPos()).getCount());
+                if (this.getPasengersMap().containsKey(-lift.getCurrentPos())){
+                    lift.setNoOfPassengers(lift.getNoOfPassengers()-this.getPasengersMap().get(-lift.getCurrentPos()));
+                    this.getPasengersMap().remove(-lift.getCurrentPos());
                 }
                 lift.setCurrentPos(lift.getCurrentPos() - lift.getIncrements());
             }
+            this.getPasengersMap().clear();
             Database.getDatabase().getCatchList().remove(this);
             lift.setStatus("idle");
             lift.setNoOfPassengers(0);

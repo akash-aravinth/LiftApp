@@ -2,15 +2,10 @@ package com.akash.app.threads;
 
 import com.akash.app.db.Database;
 import com.akash.app.model.Lift;
-import com.akash.app.model.Passenger;
 import com.akash.app.model.Requests;
-import com.sun.net.httpserver.Request;
 
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.BlockingQueue;
 
 public class InputThread implements Runnable {
     Scanner scanner = new Scanner(System.in);
@@ -109,7 +104,11 @@ public class InputThread implements Runnable {
         }
         Lift idleLift = Database.getDatabase().isAvailableInIdle(request);
         if (idleLift != null){
-            idleLift.setNoOfPassengers(request.getPassengersMap().get(request.getDestination()).getCount());
+            if (request.getSource() < request.getDestination()){
+                idleLift.setNoOfPassengers(request.getPasengersMap().get(request.getDestination()));
+            }else{
+                idleLift.setNoOfPassengers(request.getPasengersMap().get(-request.getDestination()));
+            }
             request.setLift(idleLift);
             idleLift.setDestinationPos(request.getDestination());
             Database.getDatabase().getRequests().addLast(request);
@@ -126,16 +125,17 @@ public class InputThread implements Runnable {
         System.out.println("Enter Destination Floor : ");
         int destination = scanner.nextInt();
         System.out.println("Enter Number Of Passengers : ");
-        int passengers = scanner.nextInt();
-        String move = "";
-        if (source < destination){
-            move = "up";
-        }else{
-            move = "down";
+        if (source < 0 || destination < 0 || source > 14 || destination > 14){
+            System.out.println("Enter Valid Source and Destination from 0 -> 13");
+            getRequestFromUser();
         }
+        int passengers = scanner.nextInt();
         Requests request = new Requests(source,destination,"");
-        Passenger passenger = new Passenger(move,passengers);
-        request.getPassengersMap().put(destination,passenger);
+        if (source < destination){
+            request.getPasengersMap().put(destination,passengers);
+        }else{
+            request.getPasengersMap().put(-destination,passengers);
+        }
         return request;
     }
 }
